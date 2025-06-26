@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Keeper</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 10px;
+    }
+
+    .timer-box {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.6rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      background-color: #007bff;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #888;
+      cursor: not-allowed;
+    }
+
+    .display p {
+      margin: 6px 0;
+      font-size: 1rem;
+    }
+
+    .notification {
+      color: #d9534f;
+      font-weight: bold;
+    }
+
+    @media (max-width: 500px) {
+      .timer-box {
+        padding: 20px;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+
+      button {
+        font-size: 0.95rem;
+        padding: 8px;
+      }
+
+      input[type="number"] {
+        font-size: 0.95rem;
+      }
+
+      .display p {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="timer-box">
+    <h2>⏳ Time Keeper</h2>
+    <input type="number" id="minutesInput" placeholder="Masukkan menit..." min="1" />
+    <div class="button-group">
+      <button onclick="startTimer()" id="startBtn">Mulai</button>
+      <button onclick="stopTimer()" id="stopBtn" disabled>Stop</button>
+    </div>
+    <div class="display">
+      <p id="countdown">Sisa waktu: -</p>
+      <p id="endTime">Target selesai: -</p>
+      <p class="notification" id="notification"></p>
+      <p id="note"></p>
+      <p id="stopTimeDisplay"></p>
+    </div>
+  </div>
+
+  <script>
+    let interval;
+    let startTime;
+    let targetEndTime;
+    let totalMinutes;
+
+    let notified30 = false;
+    let notified10 = false;
+    let notified5 = false;
+
+    function startTimer() {
+      const minutes = parseInt(document.getElementById("minutesInput").value);
+      if (isNaN(minutes) || minutes <= 0) {
+        alert("Masukkan menit yang valid!");
+        return;
+      }
+
+      totalMinutes = minutes;
+      startTime = new Date();
+      targetEndTime = new Date(startTime.getTime() + minutes * 60000);
+      document.getElementById("endTime").innerText =
+        "Target selesai: " + targetEndTime.toLocaleTimeString();
+
+      notified30 = false;
+      notified10 = false;
+      notified5 = false;
+
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = false;
+      document.getElementById("notification").innerText = "";
+      document.getElementById("note").innerText = "";
+      document.getElementById("stopTimeDisplay").innerText = "";
+
+      updateCountdown();
+      interval = setInterval(updateCountdown, 1000);
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = targetEndTime - now;
+      const totalSeconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      document.getElementById("countdown").innerText =
+        `Sisa waktu: ${minutes >= 0 ? minutes : 0} menit ${seconds >= 0 ? seconds : 0} detik`;
+
+      if (!notified30 && totalMinutes > 30 && minutes === 30) {
+        notify("⏰ Sisa 30 menit!");
+        notified30 = true;
+      }
+      if (!notified10 && minutes === 10) {
+        notify("⏰ Sisa 10 menit!");
+        notified10 = true;
+      }
+      if (!notified5 && minutes === 5) {
+        notify("⏰ Sisa 5 menit!");
+        notified5 = true;
+      }
+    }
+
+    function stopTimer() {
+      clearInterval(interval);
+      const stopTime = new Date();
+      const diffMs = stopTime - targetEndTime;
+      const diffMinutes = Math.round(diffMs / 60000);
+
+      const jamStop = stopTime.toLocaleTimeString();
+      document.getElementById("stopTimeDisplay").innerText = `🛑 Timer dihentikan pada: ${jamStop}`;
+
+      if (diffMinutes < 0) {
+        document.getElementById("note").innerText =
+          `🕑 Dihentikan ${Math.abs(diffMinutes)} menit lebih cepat.`;
+      } else if (diffMinutes > 0) {
+        document.getElementById("note").innerText =
+          `🕑 Dihentikan ${diffMinutes} menit terlambat.`;
+      } else {
+        document.getElementById("note").innerText = `⏱️ Dihentikan tepat waktu!`;
+      }
+
+      document.getElementById("stopBtn").disabled = true;
+      document.getElementById("startBtn").disabled = false;
+    }
+
+    function notify(message) {
+      const notifEl = document.getElementById("notification");
+      notifEl.innerText = message;
+      setTimeout(() => notifEl.innerText = "", 6000);
+    }
+  </script>
+
+</body>
+</html>
