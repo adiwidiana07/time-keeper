@@ -116,115 +116,115 @@
 
   <script>
     let interval;
-    let startTime;
-    let targetEndTime;
-    let totalMinutes;
+  let startTime;
+  let targetEndTime;
+  let totalMinutes;
 
-    let notified30 = false;
-    let notified10 = false;
-    let notified5 = false;
+  let notified10 = false;
+  let notified5 = false;
+  let notified2 = false;
 
-    function startTimer() {
-      const minutes = parseInt(document.getElementById("minutesInput").value);
-      if (isNaN(minutes) || minutes <= 0) {
-        alert("Masukkan menit yang valid!");
-        return;
-      }
-
-      totalMinutes = minutes;
-      startTime = new Date();
-      targetEndTime = new Date(startTime.getTime() + minutes * 60000);
-      document.getElementById("endTime").innerText =
-        "Target selesai: " + targetEndTime.toLocaleTimeString();
-
-      notified30 = false;
-      notified10 = false;
-      notified5 = false;
-
-      document.getElementById("startBtn").disabled = true;
-      document.getElementById("stopBtn").disabled = false;
-      document.getElementById("notification").innerText = "";
-      document.getElementById("note").innerText = "";
-      document.getElementById("stopTimeDisplay").innerText = "";
-
-      updateCountdown();
-      interval = setInterval(updateCountdown, 1000);
+  function startTimer() {
+    const minutes = parseInt(document.getElementById("minutesInput").value);
+    if (isNaN(minutes) || minutes <= 0) {
+      alert("Masukkan menit yang valid!");
+      return;
     }
 
-    function updateCountdown() {
-      const now = new Date();
-      const diff = targetEndTime - now;
-      const totalSeconds = Math.floor(diff / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
+    totalMinutes = minutes;
+    startTime = new Date();
+    targetEndTime = new Date(startTime.getTime() + minutes * 60000);
+    document.getElementById("endTime").innerText =
+      "Target selesai: " + targetEndTime.toLocaleTimeString();
 
-      document.getElementById("countdown").innerText =
-        `Sisa waktu: ${minutes >= 0 ? minutes : 0} menit ${seconds >= 0 ? seconds : 0} detik`;
+    notified10 = false;
+    notified5 = false;
+    notified2 = false;
 
-      if (!notified30 && totalMinutes > 30 && minutes === 30) {
-        notify("⏰ Sisa 30 menit!");
-        notified30 = true;
-      }
-      if (!notified10 && minutes === 10) {
-        notify("⏰ Sisa 10 menit!");
-        notified10 = true;
-      }
-      if (!notified5 && minutes === 5) {
-        notify("⏰ Sisa 5 menit!");
-        notified5 = true;
-      }
+    document.getElementById("startBtn").disabled = true;
+    document.getElementById("stopBtn").disabled = false;
+    document.getElementById("notification").innerText = "";
+    document.getElementById("note").innerText = "";
+    document.getElementById("stopTimeDisplay").innerText = "";
+
+    updateCountdown();
+    interval = setInterval(updateCountdown, 1000);
+  }
+
+  function updateCountdown() {
+    const now = new Date();
+    const diff = targetEndTime - now;
+    const totalSeconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    document.getElementById("countdown").innerText =
+      `Sisa waktu: ${minutes >= 0 ? minutes : 0} menit ${seconds >= 0 ? seconds : 0} detik`;
+
+    if (!notified10 && minutes === 10) {
+      notify("⏰ Sisa 10 menit!");
+      notified10 = true;
+    }
+    if (!notified5 && minutes === 5) {
+      notify("⏰ Sisa 5 menit!");
+      notified5 = true;
+    }
+    if (!notified2 && minutes === 2) {
+      notify("⏰ Sisa 2 menit!");
+      notified2 = true;
+    }
+  }
+
+  function stopTimer() {
+    clearInterval(interval);
+    const stopTime = new Date();
+    const diffMs = stopTime - targetEndTime;
+    const diffMinutes = Math.round(diffMs / 60000);
+    const stopStr = stopTime.toLocaleTimeString();
+    const startStr = startTime.toLocaleTimeString();
+    const targetStr = targetEndTime.toLocaleTimeString();
+
+    let result = '';
+    if (diffMinutes < 0) {
+      result = `🕑 Dihentikan ${Math.abs(diffMinutes)} menit lebih cepat.`;
+    } else if (diffMinutes > 0) {
+      result = `🕑 Dihentikan ${diffMinutes} menit terlambat.`;
+    } else {
+      result = `⏱️ Dihentikan tepat waktu!`;
     }
 
-    function stopTimer() {
-      clearInterval(interval);
-      const stopTime = new Date();
-      const diffMs = stopTime - targetEndTime;
-      const diffMinutes = Math.round(diffMs / 60000);
-      const stopStr = stopTime.toLocaleTimeString();
-      const startStr = startTime.toLocaleTimeString();
-      const targetStr = targetEndTime.toLocaleTimeString();
+    document.getElementById("note").innerText = result;
+    document.getElementById("stopTimeDisplay").innerText = `🛑 Timer dihentikan pada: ${stopStr}`;
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("stopBtn").disabled = true;
 
-      let result = '';
-      if (diffMinutes < 0) {
-        result = `🕑 Dihentikan ${Math.abs(diffMinutes)} menit lebih cepat.`;
-      } else if (diffMinutes > 0) {
-        result = `🕑 Dihentikan ${diffMinutes} menit terlambat.`;
-      } else {
-        result = `⏱️ Dihentikan tepat waktu!`;
-      }
+    addToHistory(startStr, targetStr, stopStr, result);
+  }
 
-      document.getElementById("note").innerText = result;
-      document.getElementById("stopTimeDisplay").innerText = `🛑 Timer dihentikan pada: ${stopStr}`;
-      document.getElementById("startBtn").disabled = false;
-      document.getElementById("stopBtn").disabled = true;
+  function addToHistory(start, target, stop, note) {
+    const historyList = document.getElementById("historyList");
 
-      addToHistory(startStr, targetStr, stopStr, result);
+    // Hapus "Belum ada histori" jika ada
+    if (historyList.children[0]?.tagName === 'P' && historyList.children[0].innerText.includes('Belum ada')) {
+      historyList.innerHTML = '';
     }
 
-    function addToHistory(start, target, stop, note) {
-      const historyList = document.getElementById("historyList");
+    const entry = document.createElement("div");
+    entry.innerHTML = `
+      <p>🔹 <strong>Mulai:</strong> ${start}</p>
+      <p>🎯 <strong>Target:</strong> ${target}</p>
+      <p>🛑 <strong>Stop:</strong> ${stop}</p>
+      <p>📌 ${note}</p>
+      <hr>
+    `;
+    historyList.prepend(entry);
+  }
 
-      // Hapus "Belum ada histori" jika ada
-      if (historyList.children[0]?.tagName === 'P' && historyList.children[0].innerText.includes('Belum ada')) {
-        historyList.innerHTML = '';
-      }
-
-      const entry = document.createElement("div");
-      entry.innerHTML = `
-        <p>🔹 <strong>Mulai:</strong> ${start}</p>
-        <p>🎯 <strong>Target:</strong> ${target}</p>
-        <p>🛑 <strong>Stop:</strong> ${stop}</p>
-        <p>📌 ${note}</p>
-        <hr>
-      `;
-      historyList.prepend(entry);
-    }
-
-    function notify(message) {
-      const notifEl = document.getElementById("notification");
-      notifEl.innerText = message;
-      setTimeout(() => notifEl.innerText = "", 6000);
-    }
+  function notify(message) {
+    const notifEl = document.getElementById("notification");
+    notifEl.innerText = message;
+    setTimeout(() => notifEl.innerText = "", 6000);
+  }
   </script>
 
 </body>
