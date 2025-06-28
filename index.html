@@ -8,22 +8,17 @@
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      padding: 20px;
       margin: 0;
-      padding: 10px;
     }
 
     .timer-box {
       background: white;
-      padding: 25px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
-      width: 100%;
-      box-sizing: border-box;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
     h2 {
@@ -43,7 +38,6 @@
       display: flex;
       gap: 10px;
       margin-bottom: 10px;
-      flex-wrap: wrap;
     }
 
     button {
@@ -62,7 +56,7 @@
       cursor: not-allowed;
     }
 
-    .display p {
+    .display p, .history p {
       margin: 6px 0;
       font-size: 1rem;
     }
@@ -72,25 +66,25 @@
       font-weight: bold;
     }
 
+    .history {
+      margin-top: 20px;
+      background: #fafafa;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .history h3 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+
     @media (max-width: 500px) {
-      .timer-box {
-        padding: 20px;
-      }
-
-      h2 {
-        font-size: 1.4rem;
-      }
-
       button {
         font-size: 0.95rem;
-        padding: 8px;
       }
 
       input[type="number"] {
-        font-size: 0.95rem;
-      }
-
-      .display p {
         font-size: 0.95rem;
       }
     }
@@ -111,6 +105,12 @@
       <p class="notification" id="notification"></p>
       <p id="note"></p>
       <p id="stopTimeDisplay"></p>
+    </div>
+    <div class="history" id="historyBox">
+      <h3>Riwayat Timer</h3>
+      <div id="historyList">
+        <p><i>Belum ada histori.</i></p>
+      </div>
     </div>
   </div>
 
@@ -180,22 +180,44 @@
       const stopTime = new Date();
       const diffMs = stopTime - targetEndTime;
       const diffMinutes = Math.round(diffMs / 60000);
+      const stopStr = stopTime.toLocaleTimeString();
+      const startStr = startTime.toLocaleTimeString();
+      const targetStr = targetEndTime.toLocaleTimeString();
 
-      const jamStop = stopTime.toLocaleTimeString();
-      document.getElementById("stopTimeDisplay").innerText = `🛑 Timer dihentikan pada: ${jamStop}`;
-
+      let result = '';
       if (diffMinutes < 0) {
-        document.getElementById("note").innerText =
-          `🕑 Dihentikan ${Math.abs(diffMinutes)} menit lebih cepat.`;
+        result = `🕑 Dihentikan ${Math.abs(diffMinutes)} menit lebih cepat.`;
       } else if (diffMinutes > 0) {
-        document.getElementById("note").innerText =
-          `🕑 Dihentikan ${diffMinutes} menit terlambat.`;
+        result = `🕑 Dihentikan ${diffMinutes} menit terlambat.`;
       } else {
-        document.getElementById("note").innerText = `⏱️ Dihentikan tepat waktu!`;
+        result = `⏱️ Dihentikan tepat waktu!`;
       }
 
-      document.getElementById("stopBtn").disabled = true;
+      document.getElementById("note").innerText = result;
+      document.getElementById("stopTimeDisplay").innerText = `🛑 Timer dihentikan pada: ${stopStr}`;
       document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+
+      addToHistory(startStr, targetStr, stopStr, result);
+    }
+
+    function addToHistory(start, target, stop, note) {
+      const historyList = document.getElementById("historyList");
+
+      // Hapus "Belum ada histori" jika ada
+      if (historyList.children[0]?.tagName === 'P' && historyList.children[0].innerText.includes('Belum ada')) {
+        historyList.innerHTML = '';
+      }
+
+      const entry = document.createElement("div");
+      entry.innerHTML = `
+        <p>🔹 <strong>Mulai:</strong> ${start}</p>
+        <p>🎯 <strong>Target:</strong> ${target}</p>
+        <p>🛑 <strong>Stop:</strong> ${stop}</p>
+        <p>📌 ${note}</p>
+        <hr>
+      `;
+      historyList.prepend(entry);
     }
 
     function notify(message) {
